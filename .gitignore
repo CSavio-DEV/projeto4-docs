@@ -1,0 +1,4 @@
+# .gitignore dentro da pasta de documentação
+*.env
+*.log
+_temp/
