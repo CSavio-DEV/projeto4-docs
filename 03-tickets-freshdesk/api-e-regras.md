@@ -1,8 +1,8 @@
 # Tickets Freshdesk — API, rotas e regras de negócio
 
 **Assunto:** Tickets Freshdesk
-**Versão do código de referência:** v0.1.4.13
-**Data:** 2026-09-29
+**Versão do código de referência:** v0.1.4.35
+**Data:** 2026-10-20
 **Status:** vigente
 
 ## 1. Autenticação
@@ -58,20 +58,37 @@ cf_nvel_de_atendimento:'N1'
 fr_due_by:>'2026-09-27' AND fr_due_by:<'2026-09-29'
 ```
 
-Regras validadas na conta real (v0.1.4.9 a v0.1.4.13):
+Regras validadas na conta real (v0.1.4.9 a v0.1.4.35):
 
 - a consulta completa vai entre aspas duplas no parâmetro `query` e deve ser codificada na URL;
 - datas em `fr_due_by` usam somente `YYYY-MM-DD` (`fr_due_by:<'2026-09-28'`, `fr_due_by:'2026-09-28'`, intervalo com `>` e `<`);
 - **`fr_escalated` não é pesquisável**: aparece no JSON do ticket, mas a Search API responde `invalid_field` (`Unexpected/invalid field in request`). Não usar `fr_escalated:true` nem `fr_escalated:false`;
-- a Search API devolve candidatos; para saber se o ticket já recebeu a primeira resposta é preciso consultar o detalhe com `include=stats` (seção abaixo).
+- a Search API trabalha com páginas de até 30 candidatos e aceita `page`; **`per_page` não vale em `/search/tickets`** e gera HTTP 400 (removido na v0.1.4.21);
+- a Search API devolve candidatos (entre outros: `id`, `updated_at`, `status`, `group_id`, `fr_due_by`, `fr_escalated`, `responder_id`), mas **não devolve `stats.first_responded_at`**; para saber se o ticket já recebeu a primeira resposta é preciso obter `stats` (seções abaixo).
 
-### Detalhe com `stats` (usado pela busca 1ª Resposta)
+### Listagem em lote com `stats` (usada pelas buscas com prazo de primeira resposta)
+
+```http
+GET /api/v2/tickets
+  ?updated_since=<menor updated_at dos candidatos − margem>
+  &include=stats
+  &per_page=100
+  &page=N
+  &order_by=updated_at
+  &order_type=asc
+```
+
+Cada ticket da página traz `stats` (`first_responded_at`, `agent_responded_at`, `requester_responded_at`, `resolved_at`, `closed_at`). O backend cruza por ID com os candidatos da Search API e para quando todos forem encontrados. `updated_since` usa a data de atualização, não `created_at`; a margem de segurança padrão é de 5 s. O parâmetro `?id=8021,8022,...` **é ignorado** pela listagem (devolve a página normal): não usar.
+
+Fluxo completo, cache e cobertura: `filtros-e-buscas.md`, seção 5.2, e `adds-validados/Projeto4_ADD_v004_...`.
+
+### Detalhe individual com `stats` (não usar nas buscas com `frDueBy`)
 
 ```http
 GET /api/v2/tickets/{ticket_id}?include=stats
 ```
 
-O backend consulta cada candidato e lê `stats.first_responded_at`. Preenchido = já respondido (excluído da busca 1ª Resposta). Ver `filtros-e-buscas.md`, seção 5.2.
+Foi o fluxo da v0.1.4.10 à v0.1.4.32: uma chamada por candidato. Custa 2 créditos cada, e chegou a 49 créditos numa execução (1 + 24 × 2), causando HTTP 429. Desde a v0.1.4.35 nenhuma busca com `frDueBy` o utiliza (os logs não devem mostrar `operation = ticket_details_stats` nelas).
 
 ## 3. Rotas locais do backend
 
@@ -82,6 +99,10 @@ O backend consulta cada candidato e lê `stats.first_responded_at`. Preenchido =
 | `/api/saved-searches` | GET | Lista as buscas salvas |
 | `/api/saved-searches` | POST | Salva a busca atual ou atualiza uma existente com o mesmo nome |
 | `/api/saved-searches?name=...` | DELETE | Exclui uma busca salva |
+| `/api/logs` | GET / DELETE | Lê os logs técnicos de forma incremental / limpa a memória de logs (v0.1.4.29) |
+| `/api/logs/status` | GET | Estado do serviço de logs |
+| `/api/logs/today` | GET | Arquivo diário do dia |
+| `/api/logs/settings` | PUT | Altera o modo de log (`off`, `summary`, `full`) |
 
 ## 4. Prioridade, nível e status
 
@@ -175,13 +196,32 @@ O formulário de Tickets Freshdesk usa o prefixo `tf-` nos IDs dos campos (`tf-t
 | Outros erros do Freshdesk | corpo original repassado quando possível |
 | Erro de rede ou domínio inalcançável | `502` |
 
-Retry automático e fila de espera no frontend não estão implementados.
+Retry automático com laço de repetição não existe e não deve existir: o 429 é devolvido ao frontend como resposta controlada.
 
 ### Limite de chamadas da conta (HTTP 429)
 
-O limite de requisições é **da conta Freshdesk**, compartilhado por tudo que a consulta. Nos testes da v0.1.4.13 ocorreu HTTP 429 por uso simultâneo de: Projeto3 com alertas ativos, Projeto4, scripts de inspeção e buscas repetidas em sequência. Após cerca de cinco segundos a busca voltou a responder.
+O limite de requisições é **da conta Freshdesk**, compartilhado por tudo que a consulta (Projeto3 com alertas ativos, Projeto4, scripts de inspeção e buscas repetidas).
 
-Como a busca 1ª Resposta faz uma chamada `include=stats` por candidato, ela consome mais cota que as demais. O controle de limite ainda **não existe** (cache de `stats`, controle global entre usuários, `Retry-After`, bloqueio de buscas simultâneas, retorno parcial); está em `pendencias-tickets.md`, TCK-0105.
+**Custo observado na conta testada (2026-09-29):**
+
+| Chamada | Créditos |
+|---|---:|
+| Search API (`/search/tickets`) | 1 |
+| Detalhe individual com `include=stats` | 2 |
+| Página da listagem com `include=stats` | 2 |
+
+Cabeçalhos para diagnóstico: `X-RateLimit-Total` (50 no teste), `X-RateLimit-Remaining`, `X-RateLimit-Used-CurrentRequest` e `Retry-After`. Confirmar nos logs, porque o plano da conta pode mudar.
+
+**Controle em duas camadas:**
+
+| Camada | Regra | Situação |
+|---|---|---|
+| Frontend (v0.1.4.14) | sem pesquisa simultânea; 5 s entre pesquisas; após HTTP 429, bloqueio de no mínimo 10 s ou `retryAfter` se maior, com contagem regressiva | validado (ADD v002) |
+| Backend (v0.1.4.25 a v0.1.4.27) | fila global com intervalo mínimo (padrão 5 s) e concorrência configurável (padrão 1, faixa de 1 a 10); cache de chamadas idênticas (60 s); deduplicação; bloqueio de no mínimo 60 s ou `Retry-After` maior após 429; intervalo de 10 s quando `X-RateLimit-Remaining <= 5`; o 429 não derruba o processo | aguardando validação |
+
+A diferença entre 10 s e 60 s está em aberto (P4-1209). Um intervalo mínimo de 0 ms não é considerado seguro. A **proteção preventiva por crédito restante**, o retorno parcial no frontend e o controle entre usuários seguem em `pendencias-tickets.md`, TCK-0109.
+
+Com o fluxo híbrido, a busca `1ª Resposta` do teste real consumiu 9 créditos (contra cerca de 49 do fluxo individual) e não gerou 429.
 
 ## 10. Suposições provisórias (dependem de teste real)
 

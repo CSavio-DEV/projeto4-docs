@@ -169,7 +169,7 @@ Tarefa -> Patch 1 -> teste -> Patch 2 -> ajuste -> validação do usuário -> AD
 
 O ADD só é criado quando o resultado estiver concluído e validado pelo usuário. Ele registra a conclusão da tarefa e não significa necessariamente que um arquivo novo foi criado. Os ADDs validados ficam em `adds-validados/`; o modelo concreto é o `Projeto4_ADD_v001_2026-09-28_busca_primeira_resposta_validada.md` (objetivo, regra validada, fluxo técnico, correções por versão, arquivos relacionados, validações, limitações e pendência separada, critério de conclusão e onde incorporar no manual).
 
-O documento `Projeto4_padrao_ADD_arquivos.md` não foi localizado (pendência `P4-1207`); a ausência não bloqueia a documentação, pois a regra operacional está esclarecida acima. A pasta `_a-incorporar/` de cada assunto guarda o conteúdo novo ainda não compilado e não substitui UPDATE, FLOW nem ADD.
+O padrão de ADD foi reconstruído a partir dos ADDs v001 a v004 e está em [Projeto4_padrao_ADD_arquivos.md](Projeto4_padrao_ADD_arquivos.md) (pendência `P4-1207`, concluída em 2026-10-20). O documento original nunca foi localizado. A pasta `_a-incorporar/` de cada assunto guarda o conteúdo novo ainda não compilado e não substitui UPDATE, FLOW nem ADD.
 
 ## Alterações do padrão v1.1, 29/09/2026
 
@@ -204,7 +204,7 @@ Uma página só é considerada migrada quando:
 **Depois da validação do usuário:** registrar a versão como validada; atualizar a documentação consolidada; registrar regressões encontradas; gerar o ADD da tarefa só quando ela estiver concluída e validada.
 
 ## Pendências deste assunto
-Ver `registros/pendencias.md`: `P4-1207` (reconstruir o padrão de ADD a partir dos adds enviados), `P4-1203`–`P4-1206`.
+Ver `registros/pendencias.md`: `P4-1203`–`P4-1206` e `P4-1208` (lacunas de UPDATE/FLOW). `P4-1207` (padrão de ADD) está concluída.
 
 ## Novidades ainda não incorporadas
 Ver a pasta `_a-incorporar/`.

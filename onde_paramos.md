@@ -79,8 +79,8 @@ IDs em `registros/pendencias.md` (P4-xxxx) e `03-tickets-freshdesk/pendencias-ti
 | Bloqueio após HTTP 429 | frontend: no mínimo 10 s (ADD v002, decisão 45); backend: no mínimo 60 s e autorregulação a 10 s quando restam 5 créditos ou menos (UPDATE v0.1.4.25/.26). São duas camadas; confirmar nos UPDATE/FLOW os valores vigentes e documentar |
 | Fuso | SLA em `America/Sao_Paulo`; logs em `PROJETO4_LOG_TIMEZONE=America/Fortaleza`. Decidir um fuso único ou registrar o motivo de serem dois |
 | Intervalo mínimo 0 ms | funcionou uma vez e voltou a dar 429; não considerar seguro |
-| Referência dos documentos | `registros/*` e `03-tickets-freshdesk/pendencias-tickets.md` já incorporam v0.1.4.14 a .35 (2026-10-20, P4-1212). Pendente (P4-1213): README, `api-e-regras`, `filtros-e-buscas`, `validacao` e `painel-contexto` de `03-tickets-freshdesk`, e `10-layout-frontend`, que ainda declaram v0.1.4.13 ou v0.1.4.8 |
-| `Projeto4_padrao_ADD_arquivos.md` | não existe (P4-1207); usar o ADD v002/v003 como modelo |
+| Referência dos documentos | `registros/*`, `03-tickets-freshdesk/*`, `10-layout-frontend`, `09-logs-auditoria` e `00-indice/README.md` já incorporam v0.1.4.14 a .35 (2026-10-20, P4-1212 e P4-1213). `01-preparacao` e `02-acesso-seguranca` não foram alterados |
+| `Projeto4_padrao_ADD_arquivos.md` | o original nunca foi localizado; o padrão foi reconstruído em `11-padrao-de-patch/Projeto4_padrao_ADD_arquivos.md` (P4-1207 concluída em 2026-10-20) |
 
 ## 7. Armadilhas conhecidas
 

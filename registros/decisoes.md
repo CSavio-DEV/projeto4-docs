@@ -46,7 +46,7 @@
 ## Padrão de patch `[padrao-patch]`
 29. Todo patch é entregue como um único ZIP `Projeto4_patch_vX.Y.Z.N_AAAA-MM-DD_descricao.zip`, com versão-base declarada, backup em `_backup_patch/vX.Y.Z.N/`, documentação (`UPDATE`, `FLOW`, `README_PATCH`, `manifest.json`) e validação de sintaxe/hash antes da entrega.
 30. Correção de um patch já entregue usa o próximo número de versão — nunca se reutiliza um número já entregue para conteúdo diferente.
-31. O ADD não é gerado a cada patch: registra a **conclusão validada de uma tarefa** e só é criado depois da validação do usuário (ver decisão 46, que esclarece esta regra). O documento `Projeto4_padrao_ADD_arquivos.md` não foi localizado (ver `registros/pendencias`, P4-1207).
+31. O ADD não é gerado a cada patch: registra a **conclusão validada de uma tarefa** e só é criado depois da validação do usuário (ver decisão 46, que esclarece esta regra). O documento original `Projeto4_padrao_ADD_arquivos.md` não foi localizado; o padrão foi reconstruído em `11-padrao-de-patch/Projeto4_padrao_ADD_arquivos.md` (P4-1207, concluída em 2026-10-20).
 32. `.env`, credenciais reais, cookies, sessões, logs reais e dados de usuário em `saved-searches.json` nunca entram em um patch comum.
 
 ## Design do front-end (herdado do Projeto3, vigente para telas ainda não migradas) `[layout]`

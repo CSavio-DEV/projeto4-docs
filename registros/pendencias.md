@@ -106,13 +106,13 @@ Ver `03-tickets-freshdesk/pendencias-tickets.md` (IDs `TCK-xxxx`) e `03-tickets-
 | P4-1204 | Criar matriz de validação por página | pendente |
 | P4-1205 | Corrigir o script de verificação (sintaxe, inicialização, rotas principais) | pendente |
 | P4-1206 | Manter documentação por versão (`UPDATE`, `FLOW`, `SECURITY`, ADD após validação, backup em `_backup_patch/`) | em andamento — `UPDATE`/`FLOW` seguidos de v0.1.0.0 a v0.1.4.35, com as lacunas de P4-1208; `SECURITY` ainda não formalizado; existem ADD v001 a v004 |
-| P4-1207 *(novo)* | Reconstruir `Projeto4_padrao_ADD_arquivos.md` a partir dos adds já produzidos (documento original não localizado) | pendente — a regra operacional já foi esclarecida (decisão 46) e existem quatro ADDs em `adds-validados/` (v001 a v004); o ADD v002 e o v003 têm a mesma estrutura de 11 seções e servem de modelo; falta só escrever o documento de padrão |
+| P4-1207 *(novo)* | Reconstruir `Projeto4_padrao_ADD_arquivos.md` a partir dos adds já produzidos (documento original não localizado) | concluída (2026-10-20) — padrão reconstruído dos ADDs v001 a v004 em `11-padrao-de-patch/Projeto4_padrao_ADD_arquivos.md` |
 | P4-1208 *(novo)* | Fechar as lacunas de UPDATE/FLOW: v0.1.4.9 a v0.1.4.13 (changelog resumido a partir do ADD v001), v0.1.4.17 e v0.1.4.19 (não aplicadas) e v0.1.4.28 (sem nenhum registro) | pendente — confirmar com o usuário o que ocorreu na v0.1.4.28 |
 | P4-1209 *(novo)* | Conciliar o bloqueio de HTTP 429 entre frontend (mínimo 10 s) e backend (mínimo 60 s) e documentar qual valor vale em cada camada (decisão 52) | pendente |
 | P4-1210 *(novo)* | Unificar o fuso do projeto (SLA em `America/Sao_Paulo`; logs em `America/Fortaleza`) ou registrar por que são dois | pendente — decisão do usuário |
 | P4-1211 *(novo)* | Manter um único arquivo de estado `docs/onde_paramos.md` | concluída (2026-10-20) — consolida `onde_paramos_00`, `onde_estamos_01` e `onde_paramos_02`; decisão 62 |
 | P4-1212 *(novo)* | Incorporar as versões v0.1.4.14 a v0.1.4.35 ao changelog, decisões, erros e lições e pendências | concluída (2026-10-20) nos quatro registros e em `pendencias-tickets.md` |
-| P4-1213 *(novo)* | Incorporar v0.1.4.14 a v0.1.4.35 aos documentos de assunto: README, `api-e-regras`, `filtros-e-buscas`, `validacao` e `painel-contexto` de `03-tickets-freshdesk` (referência v0.1.4.13) e `10-layout-frontend` (referência v0.1.4.8); incluir o fluxo híbrido, o cache persistente, o governador de API, o seletor de buscas e o painel `i`; `09-logs-auditoria` com a aba Logs do Projeto4 | pendente |
+| P4-1213 *(novo)* | Incorporar v0.1.4.14 a v0.1.4.35 aos documentos de assunto: README, `api-e-regras`, `filtros-e-buscas`, `validacao` e `painel-contexto` de `03-tickets-freshdesk`, `10-layout-frontend`, `09-logs-auditoria` e `00-indice/README` | concluída (2026-10-20); `01-preparacao` e `02-acesso-seguranca` não mudaram nesse intervalo, exceto novas variáveis do `.env` descritas em `api-e-regras` |
 
 ## Pendências de decisão futura (sem ID de execução ainda)
 - Cabeçalho/token específico do Cloudflare Access a usar como identidade;

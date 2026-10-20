@@ -1,8 +1,8 @@
 # Tickets Freshdesk — Painel de contexto e interface da aba
 
 **Assunto:** Tickets Freshdesk
-**Versão do código de referência:** v0.1.4.13
-**Data:** 2026-09-29
+**Versão do código de referência:** v0.1.4.35
+**Data:** 2026-10-20
 **Status:** vigente
 
 ## 1. Estado inicial da aba
@@ -63,9 +63,21 @@ O atributo do painel é `data-panel` (não `data-tab-panel`): comparar com `data
 
 ## 5. Elementos de interface relevantes
 
+
 | Elemento | Função |
 |---|---|
 | `#filterFeedback` | mensagens e avisos de filtro/busca (inclui `warnings` do backend) |
-| Indicador **Busca atual** | tipo de busca no topo da página, fora do Contexto |
+| `#searchTypeBtn` | seletor de buscas; o nome da busca ativa aparece só aqui (o indicador "Busca atual" foi removido na v0.1.4.15) |
+| Botão `i` e seu painel | explicações e informações de uso; ao lado do título Tickets Freshdesk (ver seção 6) |
+| `ticketListMeta` | mensagem de carregamento; visível apenas durante a busca |
 | Prefixo `tf-` | IDs dos campos do formulário de Tickets (evita colisão com `f-*` do Portal) |
 | Favicon vazio embutido no `<head>` | evita `GET /favicon.ico` 404 |
+
+## 6. Painel de informações (botão `i`)
+
+*(v0.1.4.15, validado, ADD v003.)* Botão circular `i` ao lado do título **Tickets Freshdesk**. Abre um painel compacto com: funcionamento geral da busca, significado de Vencidos, Hoje e Amanhã, intervalo entre pesquisas, limite da API e abertura de um ticket da lista.
+
+- fecha por `×`, por clique fora do painel e por `Esc`; tem comportamento adaptado a telas menores;
+- as explicações permanentes saíram do cabeçalho e da linha de ações; o warning técnico sobre `fr_due_by` e `America/Sao_Paulo` não vai mais ao frontend (a regra permanece comentada em `src/lib/freshdesk.js`);
+- continuam visíveis fora do painel: carregamento, erros de consulta, falhas de conexão, aviso de HTTP 429, contagem de bloqueio entre pesquisas, confirmação ou erro de busca salva e mensagens que exigem ação;
+- pendente (TCK-0113): brilho branco suave atrás do painel, sem exagero e legível no tema escuro.

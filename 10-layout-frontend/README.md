@@ -1,8 +1,8 @@
 # Layout, frontend e mobile
 
 **Assunto:** Layout, frontend e mobile
-**Versão do código de referência:** v0.1.4.8 (frontend consolidado a partir da v0.1.3.0)
-**Data:** 2026-09-29
+**Versão do código de referência:** v0.1.4.35 (frontend consolidado a partir da v0.1.3.0; alterações até a v0.1.4.31 em `principal.html`, `principal.js` e `principal.css`)
+**Data:** 2026-10-20
 **Status:** vigente, com ressalva — o frontend atual é um pré-projeto
 
 ## Aviso importante
@@ -87,6 +87,8 @@ Manter os dois blocos sempre no DOM (`.data-table-wrap` e `.ticket-cards`/`.tick
 | Identidade do usuário | `session` (`sessionStorage p4.session.v1`), `[data-user-name]`, `[data-user-origin]`, `[data-user-initials]`, `[data-portal-status]` |
 | Gate do Portal | `configurePortalGate()`, `.portal-session-notice`, `.portal-controls-disabled` |
 | Tickets (tabela + cartões) | `#ticketList`, `.data-table-wrap`, `.ticket-cards`/`.ticket-card`, `openTicket()`/`closeTicket()` |
+| Seletor de buscas | `#searchTypeBtn`, `.search-type-btn`, `.search-type-option` |
+| Mensagens de busca | `#filterFeedback`, `ticketListMeta` (só durante o carregamento) |
 | Switches ligado/desligado | `.switch`, `.switch .track` (`pointer-events:none`) |
 | Steppers de intervalo | `.stepper[data-min][data-value]`, `.stepper-value`, `adjustStepper()`, `stepFor()` |
 | Contexto lateral | `.context-panel`, `.context-fab`, `setContext()` |
@@ -97,9 +99,23 @@ Botões dentro de `[data-page]` sem integração ligada mostram `toast('Controle
 ## Telas ainda não migradas (especificação herdada do Projeto3)
 Ver `06-configuracoes/README.md` e `09-logs-auditoria/README.md` para os campos e o layout de referência de cada uma.
 
-## Ajustes de tela já solicitados (Tickets, 2026-09-29)
+## Ajustes de tela (Tickets, 2026-09-29)
 
-Primeiros itens concretos da revisão do pré-projeto, todos registrados em `03-tickets-freshdesk/pendencias-tickets.md`: botão discreto `(i)` que reúne explicações e detalhes técnicos hoje fixos na tela (TCK-0106); nome da busca ativa exibido uma única vez (TCK-0107); botão `← Voltar` com seta amarela (TCK-0108). A lista completa de itens a revisar no frontend ainda não foi informada.
+Concluídos e validados: botão discreto `i` que reúne explicações e detalhes técnicos (TCK-0106, v0.1.4.15, ADD v003) e nome da busca ativa exibido uma única vez, no seletor principal (TCK-0107). Pendente: botão `← Voltar` com seta amarela (TCK-0108). A lista completa de itens a revisar no frontend ainda não foi informada.
+
+### Elementos acrescentados desde a v0.1.4.8
+
+| Elemento | Regra |
+|---|---|
+| Botão `i` e painel | circular, ao lado do título; fecha por `×`, clique fora e `Esc`; comportamento adaptado a telas menores |
+| `#searchTypeBtn` (`.search-type-btn`) | cápsula com borda tracejada e fundo transparente; texto em `var(--accent-strong, #e8b657)`, `13px`, peso `600`; hover `#ffd078`; seta acompanha a cor principal. `Personalizada` dourada e `(não salva)` cinza |
+| `.search-type-option` | itens do menu; inativo na cor normal; ativo com destaque (`Personalizada` em destaque e `(não salva)` cinza) |
+| Botões `Carregar tickets` e `Buscar` | mostram `Buscando…` durante a pesquisa e contagem regressiva durante o bloqueio |
+| Aba Logs | console técnico com modos `Desligado`, `Resumido` e `Completo` (ver `09-logs-auditoria`) |
+
+### Ajustes visuais pedidos e ainda pendentes (TCK-0113 e P4-1006)
+
+reduzir textos longos em todas as abas (tooltip, botão de informação ou texto recolhível); barra de botões fixa na rolagem, sem sobrepor cabeçalho, filtros, menus e janelas; remover a rolagem horizontal do `body` corrigindo a origem do transbordamento (não usar `overflow-x: hidden` como atalho; manter rolagem horizontal só em componentes que precisam, como console técnico e tabela extensa); barras de rolagem em tons de cinza, com contraste suficiente, em página, listas, console de logs, janelas e painéis; na aba Logs, cores discretas por nível e escopo e rolagem que só acompanha o fim quando o usuário já está perto do rodapé.
 
 ## Pendências deste assunto
 Ver `registros/pendencias.md`: `P4-0102` (mapa de componentes), `P4-1101`–`P4-1103` (mobile por página), e a ressalva de pré-projeto no topo deste documento.

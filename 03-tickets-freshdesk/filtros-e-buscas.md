@@ -1,8 +1,8 @@
 # Tickets Freshdesk — Filtros, tipos de busca e buscas salvas
 
 **Assunto:** Tickets Freshdesk
-**Versão do código de referência:** v0.1.4.13
-**Data:** 2026-09-29
+**Versão do código de referência:** v0.1.4.35
+**Data:** 2026-10-20
 **Status:** vigente
 
 ## 1. Regra de combinação
@@ -71,7 +71,19 @@ Regra do nível: com `"level": ["N1", "Nenhum"]` a consulta deve ser:
 
 ## 5. Tipos de busca
 
-Existem três. O tipo atual aparece em três pontos: botão de seleção, cabeçalho da aba Filtros e o indicador fixo **Busca atual: `<tipo>`** no topo da página Tickets Freshdesk, visível com o Contexto fechado e com a lista vazia ou carregada.
+Existem três. O nome da busca ativa aparece **uma única vez**, no seletor principal (botão `#searchTypeBtn`); o indicador "Busca atual" do topo e o do cabeçalho dos filtros foram removidos na v0.1.4.15 (ADD v003). As explicações dos tipos e dos prazos ficam no painel do botão `i`.
+
+### 5.0 Seletor de buscas
+
+*(v0.1.4.16 a v0.1.4.20; aguardando validação, salvo as cores, aceitas pelo usuário.)*
+
+Ordem do menu do botão: Abertos Portal N1, 1ª Resposta, até três buscas adicionais na ordem do JSON e, por último, `Personalizada (não salva)`.
+
+- até **cinco** buscas salvas visíveis; as duas de sistema contam no limite; as demais continuam disponíveis na área completa de buscas salvas;
+- clicar numa busca salva do menu carrega seus filtros e atualiza o seletor da área de buscas salvas;
+- o nome `Personalizada` é **reservado**, junto de `Personalizada não salva` e `Personalizada (não salva)`; a comparação ignora caixa e espaços externos; a validação existe no frontend e no backend. Mensagem: "O nome “Personalizada” é reservado pelo sistema. Escolha outro nome para a busca.";
+- ao entrar em `Personalizada (não salva)` a partir de uma busca salva, os filtros são limpos **uma única vez**; novo clique, já nesse estado, não apaga os filtros preenchidos;
+- visual: no botão principal, `Personalizada` em dourado, `(não salva)` em cinza e a seta dourada; no menu, item inativo na cor normal e item ativo com `Personalizada` em destaque e `(não salva)` em cinza; buscas salvas comuns em dourado.
 
 Os parâmetros das buscas fixas são carregados nos filtros do Contexto Geral. O usuário pode preencher filtros adicionais, combinados por **E**.
 
@@ -89,12 +101,12 @@ Implementação: função compartilhada `buildGroupsClause()` e constante `GRUPO
 
 ### 5.2 1ª Resposta
 
-`searchType` interno: `primeira_resposta`. **Validada pelo usuário na v0.1.4.13** (ver `adds-validados/Projeto4_ADD_v001_2026-09-28_busca_primeira_resposta_validada.md`).
+`searchType` interno: `primeira_resposta`. Regra **validada pelo usuário na v0.1.4.13** (ver `adds-validados/Projeto4_ADD_v001_2026-09-28_busca_primeira_resposta_validada.md`); fluxo técnico atualizado nas v0.1.4.33 a v0.1.4.35 (ADD v004).
 
 | Filtro | Valores |
 |---|---|
 | Grupo | os mesmos 5 grupos de Abertos Portal N1 |
-| Status | Aberto e Pendente |
+| Status | Aberto e Pendente (a busca fixa preenche e envia os dois explicitamente desde a v0.1.4.31) |
 | Prazo para primeira resposta | Vencidos, Hoje, Amanhã |
 
 Ao carregar a busca salva de sistema, vêm selecionados **Vencidos** e **Hoje**. **Amanhã** aparece no campo, fica desmarcado por padrão e pode ser marcado manualmente.
@@ -123,23 +135,52 @@ Amanhã:   first_responded_at == null AND fr_due_by >= 00h de amanhã
 
 As três classes não se sobrepõem depois da filtragem final.
 
-#### Fluxo técnico
+#### Fluxo técnico (híbrido, v0.1.4.33 a v0.1.4.35)
+
+Ativado por **`frDueBy` preenchido**, qualquer que seja o tipo ou nome da busca (fixa, personalizada ou salva).
 
 ```text
-Search API localiza candidatos (grupos, status, fr_due_by em YYYY-MM-DD)
-  -> backend carrega cada candidato com ?include=stats
+Search API pré-seleciona candidatos (grupos, status, fr_due_by em YYYY-MM-DD)
+  -> coletar id, updated_at, status, group_id, fr_due_by
+  -> consultar o cache persistente por ticket_id + updated_at
+       cache hit: reutilizar stats
+       cache miss: seguir
+  -> updated_since = menor updated_at dos ausentes − 5 s
+  -> GET /tickets?include=stats&per_page=100&page=N&order_by=updated_at&order_type=asc
+  -> cruzar por ID; salvar no cache; parar quando todos forem encontrados
   -> first_responded_at preenchido: excluir
   -> sem primeira resposta: comparar fr_due_by e classificar
-  -> devolver ao frontend só os tickets válidos
+  -> devolver os tickets válidos e o diagnóstico
 ```
 
-A resposta interna traz `candidateCount`, `returnedCount`, `criterion: stats.first_responded_at == null` e `scope: página atual da Search API`. Exemplo validado (Amanhã): 6 candidatos, 4 já respondidos excluídos, 2 retornados.
+Operações esperadas nos logs: `search_first_response_candidates` e, havendo cache misses, `list_candidate_stats`. **Nunca** `ticket_details_stats`.
+
+Limites e configuração (`.env`):
+
+```text
+FRESHDESK_FIRST_RESPONSE_SEARCH_MAX_PAGES=10            (Search API, 30 candidatos por página)
+FRESHDESK_FIRST_RESPONSE_PER_PAGE=100
+FRESHDESK_FIRST_RESPONSE_STATS_MAX_PAGES=10
+FRESHDESK_FIRST_RESPONSE_UPDATED_SAFETY_SECONDS=5
+FRESHDESK_FIRST_RESPONSE_CACHE_TTL_HOURS=168
+FRESHDESK_FIRST_RESPONSE_CACHE_MAX_ENTRIES=2000
+```
+
+**Cache persistente** (`data/cache/freshdesk-ticket-stats.json`): mesma chave `ticket_id + updated_at` reutiliza stats; se `updated_at` mudar, a versão anterior é invalidada e substituída; sobrevive a reinício; guarda só campos técnicos mínimos (nunca descrição, conversa, e-mail, CPF, anexo, cookie, token ou API key); escrita atômica; compartilhado por qualquer busca que precise de stats.
+
+**Cobertura.** Se o máximo de páginas for atingido com candidatos ainda ausentes, a resposta traz `complete: false`, `missingCandidateCount` e `missingCandidateIds`. Resultado incompleto nunca é apresentado como cobertura total; o aviso visual de resultado parcial no frontend ainda está pendente (TCK-0109). O resumo usa `apiUnitsConsumed`, o consumo real.
+
+**Resultado do teste real (ADD v004):** 26 candidatos da Search API (26 Abertos), 1 página da Search API, 4 páginas com stats, 309 tickets examinados, 26 cruzados, 0 ausentes, 2 sem primeira resposta, 5 chamadas, 9 créditos, cerca de 2,6 s, sem HTTP 429. Os 26 candidatos coincidiram com a busca manual de grupos, Aberto e Pendente.
+
+A resposta interna traz `candidateCount`, `returnedCount` e `criterion: stats.first_responded_at == null`.
 
 #### Regras que permanecem
 
-- a verificação de `stats.first_responded_at == null` continua ativa quando a busca vira **Personalizada não salva**, desde que exista qualquer filtro de prazo (`frDueBy`);
-- a busca só é feita na página atual da Search API (`scope`); não há varredura de todas as páginas;
-- cada candidato custa uma chamada extra a `?include=stats`, o que expõe o limite de requisições da conta (ver `pendencias-tickets.md`, TCK-0105).
+- a verificação de `stats.first_responded_at == null` e o fluxo híbrido continuam ativos quando a busca vira **Personalizada não salva**, desde que exista qualquer filtro de prazo (`frDueBy`);
+- `responder_id` e `fr_escalated` não são critério de primeira resposta;
+- não voltar à consulta individual `/tickets/{id}?include=stats` como fluxo padrão;
+- não alterar o fluxo sem analisar os logs e o código completo atual;
+- validações de uso continuado (cache em segunda execução e após reinício, `Amanhã` na busca personalizada, auditoria de grupos, fuso e limite entre dias): TCK-0112.
 
 ### 5.3 Personalizada
 
@@ -147,7 +188,7 @@ Usa somente os filtros preenchidos no formulário. Uma busca é personalizada qu
 
 Se nenhum filtro for preenchido:
 
-- o frontend pede confirmação;
+- o frontend avisa o volume e pede confirmação para carregar os primeiros 30 tickets (a Search API devolve 30 por página; `per_page` não é aceito);
 - o backend aplica `created_at:>'2000-01-01'`;
 - o backend devolve aviso em `warnings`, apresentado em `#filterFeedback`.
 
@@ -171,6 +212,8 @@ executar a busca
 ```
 
 Mesmo que o usuário volte os filtros aos valores anteriores, a busca permanece **Personalizada não salva**. Para restaurar a busca salva, é preciso carregá-la novamente.
+
+**Preencher os filtros por código não é edição manual.** Carregar uma busca salva preenche os filtros programaticamente; só a alteração feita pelo usuário muda o estado para Personalizada. Erro conhecido: carregar `N2-Abertos` muda para `Personalizada (usar filtros)` (TCK-0110).
 
 ## 7. Buscas salvas
 
